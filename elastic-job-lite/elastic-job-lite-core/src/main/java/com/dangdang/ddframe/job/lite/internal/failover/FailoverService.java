@@ -53,6 +53,7 @@ public final class FailoverService {
     
     /**
      * 设置失效的分片项标记.
+     * /${JOB_NAME}/leader/failover/items/${ITEM_ID}。该数据节点为永久节点，存储空串( "" )
      * 
      * @param item 崩溃的作业项
      */
@@ -74,8 +75,15 @@ public final class FailoverService {
             jobNodeStorage.executeInLeader(FailoverNode.LATCH, new FailoverLeaderExecutionCallback());
         }
     }
-    
+
+    /**
+     * 是否需要执行失败转移逻辑
+     * @return
+     */
     private boolean needFailover() {
+        //1.zk是否存在 leader/failover/items 节点
+        //2.leader/failover/items 下存在子文件
+        //3.判断本实例jobName的作业是否执行完毕(显然,这里应该是执行完毕了)
         return jobNodeStorage.isJobNodeExisted(FailoverNode.ITEMS_ROOT) && !jobNodeStorage.getJobNodeChildrenKeys(FailoverNode.ITEMS_ROOT).isEmpty()
                 && !JobRegistry.getInstance().isJobRunning(jobName);
     }
@@ -113,7 +121,8 @@ public final class FailoverService {
     
     /**
      * 获取运行在本作业服务器的失效转移分片项集合.
-     * 
+     * `${JOB_NAME}/sharding/${ITEM_ID}/failover`
+     *
      * @return 运行在本作业服务器的失效转移分片项集合
      */
     public List<Integer> getLocalFailoverItems() {
@@ -152,16 +161,21 @@ public final class FailoverService {
         
         @Override
         public void execute() {
+            //获取到分布式锁再次判断条件是否成立
             if (JobRegistry.getInstance().isShutdown(jobName) || !needFailover()) {
                 return;
             }
+            // 获得一个 `${JOB_NAME}/leader/failover/items/${ITEM_ID}` 作业分片项
             int crashedItem = Integer.parseInt(jobNodeStorage.getJobNodeChildrenKeys(FailoverNode.ITEMS_ROOT).get(0));
             log.debug("Failover job '{}' begin, crashed item '{}'", jobName, crashedItem);
+            // 设置这个 `${JOB_NAME}/sharding/${ITEM_ID}/failover` 作业分片项 为 当前作业节点
             jobNodeStorage.fillEphemeralJobNode(FailoverNode.getExecutionFailoverNode(crashedItem), JobRegistry.getInstance().getJobInstance(jobName).getJobInstanceId());
+            // 移除这个 `${JOB_NAME}/leader/failover/items/${ITEM_ID}` 作业分片项
             jobNodeStorage.removeJobNodeIfExisted(FailoverNode.getItemsNode(crashedItem));
             // TODO 不应使用triggerJob, 而是使用executor统一调度
             JobScheduleController jobScheduleController = JobRegistry.getInstance().getJobScheduleController(jobName);
             if (null != jobScheduleController) {
+                //注意:这里会立刻执行failover的分片吗? 并不会,这里是再次触发 LiteJob, 在 LiteJob中会获取本机要执行的 items,其中会优先获取 failover的 items
                 jobScheduleController.triggerJob();
             }
         }

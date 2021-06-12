@@ -19,6 +19,7 @@ package com.dangdang.ddframe.job.config;
 
 /**
  * 作业配置根接口.
+ * 【job全部的配置】
  *
  * @author zhangliang
  */

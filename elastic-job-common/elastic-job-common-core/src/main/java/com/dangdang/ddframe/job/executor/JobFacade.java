@@ -53,14 +53,14 @@ public interface JobFacade {
     
     /**
      * 注册作业启动信息.
-     *
+     * PS:这里的作业启动指在执行 execute的作业,在执行execute之前 JobRegistry.getInstance().setJobRunning(jobName, true);
      * @param shardingContexts 分片上下文
      */
     void registerJobBegin(ShardingContexts shardingContexts);
     
     /**
      * 注册作业完成信息.
-     *
+     * PS:这里的作业启动指在执行 execute的作业,在执行execute之后 JobRegistry.getInstance().setJobRunning(jobName, false);
      * @param shardingContexts 分片上下文
      */
     void registerJobCompleted(ShardingContexts shardingContexts);

@@ -65,6 +65,7 @@ public final class ExecutionService {
     
     /**
      * 注册作业完成信息.
+     * PS:从
      * 
      * @param shardingContexts 分片上下文
      */
@@ -73,6 +74,7 @@ public final class ExecutionService {
         if (!configService.load(true).isMonitorExecution()) {
             return;
         }
+        //更新zk中item的running状态
         for (int each : shardingContexts.getShardingItemParameters().keySet()) {
             jobNodeStorage.removeJobNodeIfExisted(ShardingNode.getRunningNode(each));
         }

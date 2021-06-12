@@ -35,15 +35,35 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class JobRegistry {
     
     private static volatile JobRegistry instance;
-    
+
+    /**
+     * key : jobName
+     * value : JobScheduleController
+     */
     private Map<String, JobScheduleController> schedulerMap = new ConcurrentHashMap<>();
-    
+
+    /**
+     * key : jobName
+     * value : CoordinatorRegistryCenter
+     */
     private Map<String, CoordinatorRegistryCenter> regCenterMap = new ConcurrentHashMap<>();
-    
+
+    /**
+     * key : jobName
+     * value : JobInstance
+     */
     private Map<String, JobInstance> jobInstanceMap = new ConcurrentHashMap<>();
-    
+
+    /**
+     * key : jobName
+     * value : boolean 作业是否运行中
+     */
     private Map<String, Boolean> jobRunningMap = new ConcurrentHashMap<>();
-    
+
+    /**
+     * key : jobName
+     * value : 总分片数
+     */
     private Map<String, Integer> currentShardingTotalCountMap = new ConcurrentHashMap<>();
     
     /**

@@ -31,7 +31,8 @@ public final class FailoverNode {
     static final String FAILOVER = "failover";
     
     static final String LEADER_ROOT = LeaderNode.ROOT + "/" + FAILOVER;
-    
+
+    //全路径  leader/failover/items
     static final String ITEMS_ROOT = LEADER_ROOT + "/items";
     
     static final String ITEMS = ITEMS_ROOT + "/%s";
